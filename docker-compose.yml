@@ -1,8 +1,8 @@
 version: '3'
 services:
   flask:
-    build: ./PlantFriendsApp
-    image: plantfriendsapp
+    build: ./flask
+    image: flask
     command: uwsgi --enable-threads --http-socket 0.0.0.0:5000 -w wsgi:app
     labels:
       - "traefik.enable=true"
