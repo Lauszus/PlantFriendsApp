@@ -1,0 +1,20 @@
+version: '3'
+services:
+  flask:
+    build: ./PlantFriendsApp
+    image: plantfriendsapp
+    command: uwsgi --enable-threads --http-socket 0.0.0.0:5000 -w wsgi:app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=flask"
+      - "traefik.frontend.rule=plant.lauszus.com"
+  traefik:
+    image: traefik:v1.7
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.toml:/etc/traefik/traefik.toml:ro
+      - ./traefik/acme:/etc/traefik/acme
+    ports:
+     - "80:80"
+     - "443:443"
+     - "8080:8080"

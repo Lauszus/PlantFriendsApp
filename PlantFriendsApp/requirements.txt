@@ -1,0 +1,9 @@
+uwsgi
+flask>=1.0.0
+flask-mail
+flask-caching
+flask-compress
+coloredlogs
+apscheduler
+pygithub
+packaging
