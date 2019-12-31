@@ -8,6 +8,7 @@ RUN conda config --add channels conda-forge && \
 
 # Copy over our app
 COPY . /app
+WORKDIR /app
 
 # Create a flask user to avoid running uwsgi as root
 RUN useradd -r flask
