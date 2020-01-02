@@ -112,6 +112,11 @@ def _get_latest_downloaded_release() -> Optional[str]:
     return latest_tag
 
 
+@app.route('/', methods=['GET'])
+def index():
+    return Response('This page is meant for \U0001F331, not \U0001F412', status=200, mimetype='text/html')
+
+
 @app.route('/update', methods=['GET'])
 @nocache
 def update():
