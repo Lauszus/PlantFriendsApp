@@ -129,7 +129,7 @@ def update():
     user_agent = request.headers.get('User-Agent')
     if user_agent != 'ESP8266-http-Update':
         app.logger.warning('Invalid User-Agent header: {}'.format(user_agent))
-        abort(403)
+        return index()
 
     if any(k not in request.headers for k in ['x-ESP8266-Chip-ID', 'x-ESP8266-STA-MAC', 'x-ESP8266-AP-MAC',
                                               'x-ESP8266-free-space', 'x-ESP8266-sketch-size', 'x-ESP8266-sketch-md5',
