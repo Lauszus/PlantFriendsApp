@@ -1,23 +1,18 @@
-FROM continuumio/miniconda3:latest
-
-COPY requirements.txt requirements.txt
-
-# Add conda-forge to get uwsgi
-RUN conda config --add channels conda-forge && \
-    conda create -y -n flask python=3 --file requirements.txt
+FROM python:3.8-buster
 
 # Copy over our app
 COPY . /app
 WORKDIR /app
+
+# Install all requirements
+RUN pip3 install -U pip setuptools wheel && \
+    pip3 install -r /app/requirements.txt
 
 # Create a flask user to avoid running uwsgi as root
 RUN useradd -r flask
 RUN chown -R flask /app
 USER flask
 
-# activate the flask environment
-ENV PATH /opt/conda/envs/flask/bin:$PATH
-
+# Start the application on port 5000
 EXPOSE 5000
-
 CMD ["uwsgi", "--enable-threads", "--http-socket", "0.0.0.0:5000", "-w", "wsgi:app"]
