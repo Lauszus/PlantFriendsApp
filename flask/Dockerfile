@@ -1,15 +1,18 @@
-FROM python:3.8-buster
+FROM python:3.8-alpine
 
 # Copy over our app
 COPY . /app
 WORKDIR /app
 
+# Install dependencies for building the dependencies
+RUN apk update && apk add gcc musl-dev linux-headers
+
 # Install all requirements
 RUN pip3 install -U pip setuptools wheel && \
-    pip3 install -r /app/requirements.txt
+    pip3 install -r requirements.txt
 
 # Create a flask user to avoid running uwsgi as root
-RUN useradd -r flask
+RUN adduser -S flask
 RUN chown -R flask /app
 USER flask
 
