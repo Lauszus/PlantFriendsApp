@@ -91,7 +91,7 @@ class MailExceptionHandler(SMTPHandler):
         try:
             # Send exception report via email
             from flask_mail import Message
-            msg = Message(subject='Plat Friends Exception Report', recipients=app.config['MAIL_ADMINS'],
+            msg = Message(subject='Plant Friends Exception Report', recipients=app.config['MAIL_ADMINS'],
                           body=self.format(record))
             mail.send(msg)
         except Exception:
