@@ -5,7 +5,7 @@ COPY . /flask
 WORKDIR /flask
 
 # Install dependencies for building the dependencies
-RUN apk update && apk add gcc musl-dev linux-headers
+RUN apk update && apk add gcc musl-dev linux-headers pcre-dev
 
 # Install all requirements
 RUN pip3 install -U pip setuptools wheel && \
