@@ -1,8 +1,8 @@
 FROM python:3.8-alpine
 
 # Copy over our app
-COPY . /app
-WORKDIR /app
+COPY . /flask
+WORKDIR /flask
 
 # Install dependencies for building the dependencies
 RUN apk update && apk add gcc musl-dev linux-headers
@@ -13,7 +13,7 @@ RUN pip3 install -U pip setuptools wheel && \
 
 # Create a flask user to avoid running uwsgi as root
 RUN adduser -S flask
-RUN chown -R flask /app
+RUN chown -R flask /flask
 USER flask
 
 # Start the application on port 5000

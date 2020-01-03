@@ -9,7 +9,7 @@ services:
       - "traefik.backend=flask"
       - "traefik.frontend.rule=Host:plant.lauszus.com"
     volumes:
-      - ./flask/app/update:/app/app/update:rw
+      - ./flask/app/update:/flask/app/update:rw
   traefik:
     image: traefik:v1.7
     restart: always
