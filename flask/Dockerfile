@@ -18,4 +18,4 @@ USER flask
 
 # Start the application on port 5000
 EXPOSE 5000
-CMD ["uwsgi", "--enable-threads", "--http-socket", "0.0.0.0:5000", "-w", "wsgi:app"]
+CMD ["uwsgi", "--enable-threads", "--http-socket", "0.0.0.0:5000", "--http-timeout", "5", "-w", "wsgi:app"]
