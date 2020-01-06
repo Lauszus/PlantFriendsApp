@@ -35,8 +35,10 @@ services:
       - "traefik.tcp.routers.mqtt-secure.service=mqtt-secure"
       - "traefik.tcp.services.mqtt-secure.loadbalancer.server.port=1883"
     volumes:
+      # sudo touch ./mosquitto/log/mosquitto.log
+      # sudo chmod o+w ./mosquitto/log/mosquitto.log
       # sudo chown -R 1883:1883 ./mosquitto
-      - "./mosquitto/config:/mosquitto/config:ro"
+      - "./mosquitto:/mosquitto:ro"
       - "./mosquitto/data:/mosquitto/data"
       - "./mosquitto/log:/mosquitto/log"
       - "/etc/localtime:/etc/localtime:ro"

@@ -1,0 +1,5 @@
+user admin
+topic read $SYS/#
+topic readwrite #
+
+pattern readwrite plant/%u/#
