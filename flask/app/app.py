@@ -175,9 +175,12 @@ def update():
             app.logger.error('Checksum failed for "{}{}{}"'.format(dirname, os.path.sep, filename))
             return Response(status=304, mimetype='text/plain')
 
+        # Include the version in the filename
+        attachment_filename = os.path.splitext(filename)[0] + '_' + latest_release + os.path.splitext(filename)[1]
+
         # Send the file including the MD5 checksum
-        response = make_response(send_from_directory(dirname, filename, as_attachment=True,
-                                                     mimetype='application/octet-stream'))
+        response = make_response(send_from_directory(dirname, filename, attachment_filename=attachment_filename,
+                                                     as_attachment=True, mimetype='application/octet-stream'))
         response.headers['x-MD5'] = md5(os.path.join(dirname, filename))
         return response
 
@@ -237,8 +240,7 @@ def download_latest_release(owner: str, repo_name: str, current_version: str, fi
                 with open(os.path.join(dirname, a.name), 'wb') as f:
                     f.write(response.content)
 
-            return (dirname, release.tag_name, release.body) if md5sums(dirname, file_names) is True \
-                else None
+            return (dirname, release.tag_name, release.body) if md5sums(dirname, file_names) is True else None
     except requests.exceptions.ConnectionError:
         app.logger.warning('The internet connection is down')
         return None
