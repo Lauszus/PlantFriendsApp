@@ -109,7 +109,7 @@ def _get_latest_downloaded_release() -> Optional[str]:
 
     # Check if the list is empty
     if not dirnames:
-        app.logger.warning('No release was downloaded')
+        app.logger.warning('Update folder was created, but no released has been downloaded yet')
         return None
 
     # Return the latest tag
