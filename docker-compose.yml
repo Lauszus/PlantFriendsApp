@@ -5,7 +5,10 @@ services:
     image: flask
     restart: always
     labels:
+      # Expose container to Traefik
       - "traefik.enable=true"
+
+      # Configure the route
       - "traefik.http.routers.flask.rule=Host(`plant.lauszus.com`)"
       # - "traefik.http.routers.flask.rule=Host(`plant.docker.localhost`)"
       - "traefik.http.routers.flask.entrypoints=websecure"
@@ -13,12 +16,38 @@ services:
       - "traefik.http.routers.flask.tls.certresolver=leresolver"
     volumes:
       - "./flask/app/update:/flask/app/update"
+  mqtt:
+    image: eclipse-mosquitto
+    restart: always
+    labels:
+      # Expose container to Traefik
+      - "traefik.enable=true"
+
+      # Configure the the insecure MQTT route
+      - "traefik.tcp.routers.mqtt.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mqtt.entrypoints=mqtt"
+
+      # Configure the the secure MQTT route
+      - "traefik.tcp.routers.mqtt-secure.rule=HostSNI(`plant.lauszus.com`)"
+      - "traefik.tcp.routers.mqtt-secure.entrypoints=mqtt-secure"
+      - "traefik.tcp.routers.mqtt-secure.tls=true"
+      - "traefik.tcp.routers.mqtt-secure.tls.certresolver=leresolver"
+      - "traefik.tcp.routers.mqtt-secure.service=mqtt-secure"
+      - "traefik.tcp.services.mqtt-secure.loadbalancer.server.port=1883"
+    volumes:
+      # sudo chown -R 1883:1883 ./mosquitto
+      - "./mosquitto/config:/mosquitto/config:ro"
+      - "./mosquitto/data:/mosquitto/data"
+      - "./mosquitto/log:/mosquitto/log"
+      - "/etc/localtime:/etc/localtime:ro"
   traefik:
     image: traefik:v2.1
     restart: always
     command:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.mqtt.address=:1883"
+      - "--entrypoints.mqtt-secure.address=:8883"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--api.dashboard=true"
@@ -33,7 +62,10 @@ services:
     ports:
      - "80:80"
      - "443:443"
+     - "1883:1883"
+     - "8883:8883"
     labels:
+      # Expose container to Traefik
       - "traefik.enable=true"
 
       # Dashboard

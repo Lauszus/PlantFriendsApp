@@ -19,3 +19,5 @@ htmlcov/
 *.pem
 traefik/usersfile
 traefik/acme/acme.json
+mosquitto/data/mosquitto.db
+mosquitto/log/mosquitto.log
