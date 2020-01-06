@@ -90,10 +90,11 @@ class MailExceptionHandler(SMTPHandler):
         # noinspection PyBroadException
         try:
             # Send exception report via email
-            from flask_mail import Message
-            msg = Message(subject='Plant Friends Exception Report', recipients=app.config['MAIL_ADMINS'],
-                          body=self.format(record))
-            mail.send(msg)
+            with app.app_context(), app.test_request_context():
+              from flask_mail import Message
+              msg = Message(subject='Plant Friends Exception Report', recipients=app.config['MAIL_ADMINS'],
+                            body=self.format(record))
+              mail.send(msg)
         except Exception:
             self.handleError(record)
 
