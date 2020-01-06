@@ -17,4 +17,5 @@ htmlcov/
 .coverage*
 */instance/config.py
 *.pem
+traefik/usersfile
 traefik/acme/acme.json

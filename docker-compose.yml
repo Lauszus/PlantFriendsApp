@@ -6,18 +6,50 @@ services:
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.backend=flask"
-      - "traefik.frontend.rule=Host:plant.lauszus.com"
+      - "traefik.http.routers.flask.rule=Host(`plant.lauszus.com`)"
+      # - "traefik.http.routers.flask.rule=Host(`plant.docker.localhost`)"
+      - "traefik.http.routers.flask.entrypoints=websecure"
+      - "traefik.http.routers.flask.tls=true"
+      - "traefik.http.routers.flask.tls.certresolver=leresolver"
     volumes:
-      - ./flask/app/update:/flask/app/update:rw
+      - "./flask/app/update:/flask/app/update"
   traefik:
-    image: traefik:v1.7
+    image: traefik:v2.1
     restart: always
+    command:
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--api.dashboard=true"
+      - "--certificatesresolvers.leresolver.acme.email=lauszus@gmail.com"
+      - "--certificatesresolvers.leresolver.acme.storage=/etc/traefik/acme/acme.json"
+      - "--certificatesresolvers.leresolver.acme.httpChallenge=true"
+      - "--certificatesresolvers.leresolver.acme.httpChallenge.entrypoint=web"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik/traefik.toml:/etc/traefik/traefik.toml:ro
-      - ./traefik/acme:/etc/traefik/acme
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik:/etc/traefik:ro"
+      - "./traefik/acme:/etc/traefik/acme"
     ports:
      - "80:80"
      - "443:443"
-     - "8080:8080"
+    labels:
+      - "traefik.enable=true"
+
+      # Dashboard
+      - "traefik.http.routers.traefik.rule=Host(`plant.lauszus.com`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      # - "traefik.http.routers.traefik.rule=Host(`traefik.docker.localhost`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=leresolver"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=authtraefik"
+      - "traefik.http.middlewares.authtraefik.basicauth.usersfile=/etc/traefik/usersfile"
+
+      # Global redirect to https
+      - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+
+      # Middleware redirect
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"

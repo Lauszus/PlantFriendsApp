@@ -1,11 +1,13 @@
 FROM python:3.8-alpine
 
+MAINTAINER Kristian Sloth Lauszus <lauszus@gmail.com>
+
 # Copy over our app
 COPY . /flask
 WORKDIR /flask
 
 # Install dependencies for building the dependencies
-RUN apk update && apk add gcc musl-dev linux-headers pcre-dev
+RUN apk add --no-cache gcc musl-dev linux-headers pcre-dev
 
 # Install all requirements
 RUN pip3 install -U pip setuptools wheel && \
