@@ -21,6 +21,3 @@
 # e-mail   :  lauszus@gmail.com
 
 from app import app
-
-if __name__ == "__main__":
-    app.run()
