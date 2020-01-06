@@ -24,6 +24,7 @@ import functools
 import hashlib
 import os
 import re
+import shutil
 import threading
 from typing import Optional, Tuple
 
@@ -106,6 +107,11 @@ def _get_latest_downloaded_release() -> Optional[str]:
             app.logger.warning('No release was downloaded')
             return None
 
+    # Check if the list is empty
+    if not dirnames:
+        app.logger.warning('No release was downloaded')
+        return None
+
     # Return the latest tag
     latest_tag = sorted(dirnames, key=parse)[-1]
     app.logger.info('Latest release: {}'.format(latest_tag))
@@ -179,7 +185,16 @@ def update():
 def download_latest_release(owner: str, repo_name: str, current_version: str, file_names: Optional[list] = None) \
         -> Optional[Tuple[str, str, str]]:
     try:
-        g = Github()
+        # First verify that the latest release is valid
+        with _release_lock:
+            dirname = os.path.join(app.config['UPDATE_FOLDER'], repo_name, current_version)
+            if os.path.exists(dirname) and not md5sums(dirname, file_names):
+                app.logger.warning('"{}" is invalid, so deleting it'.format(dirname))
+                # Something went wrong, so delete all the files and the directory
+                shutil.rmtree(dirname)
+                current_version = '0'  # Get the latest version
+
+        g = Github(app.config['GITHUB_OAUTH_TOKEN'])
         repo = g.get_repo(owner + '/' + repo_name)  # type: Repository
         try:
             if list(repo.get_releases()):
@@ -210,11 +225,12 @@ def download_latest_release(owner: str, repo_name: str, current_version: str, fi
                     continue
 
                 # Download the file using the Github API
+                headers = {'Authorization': 'token {}'.format(app.config['GITHUB_OAUTH_TOKEN']),
+                           'Accept': 'application/octet-stream'}
                 url = 'https://api.github.com/repos/{}/{}/releases/assets/{}'.format(owner, repo_name, a.id)
                 app.logger.info('Downloading "{}" from {}'.format(a.name, url))
 
-                response = requests.get(url, allow_redirects=True, headers={'Accept': 'application/octet-stream'},
-                                        stream=True)
+                response = requests.get(url, allow_redirects=True, headers=headers, stream=True)
                 if response.status_code != 200:
                     app.logger.error('Failed to download "{}", status code: {}'.format(a.name, response.status_code))
                     return None
@@ -224,18 +240,20 @@ def download_latest_release(owner: str, repo_name: str, current_version: str, fi
             return (dirname, release.tag_name, release.body) if md5sums(dirname, file_names) is True \
                 else None
     except requests.exceptions.ConnectionError:
+        app.logger.warning('The internet connection is down')
         return None
 
 
-@scheduler.scheduled_job('interval', hours=24)
+@scheduler.scheduled_job('interval', hours=1)
 def check_github_release():
     try:
-        owner, repo_name, version = 'MadsBornebusch', 'PlantFriends', _get_latest_downloaded_release() or '0'
-        result = download_latest_release(owner, repo_name, version)
-        if result is not None:
-            dirname, version, body = result
-            app.logger.info('{}-{} was successfully downloaded to "{}", body: {}'.format(repo_name, version, dirname,
-                                                                                         repr(body)))
+        with app.app_context(), app.test_request_context():
+            owner, repo_name, version = 'MadsBornebusch', 'PlantFriends', _get_latest_downloaded_release() or '0'
+            result = download_latest_release(owner, repo_name, version)
+            if result is not None:
+                dirname, version, body = result
+                app.logger.info('{}-{} was successfully downloaded to "{}", body: {}'.format(repo_name, version, dirname,
+                                                                                             repr(body)))
     except Exception as e:
         # Catch and log the exception, so an email is sent
         app.logger.exception('Failed to get latest Github release')

@@ -31,3 +31,6 @@ MAIL_USERNAME = ''
 MAIL_PASSWORD = ''
 MAIL_DEFAULT_SENDER = ('Plant Friends Bot', '')
 MAIL_ADMINS = ['']
+
+# Github token
+GITHUB_OAUTH_TOKEN = ''
