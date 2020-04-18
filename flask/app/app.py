@@ -128,20 +128,12 @@ def index():
 def update():
     # See: https://arduino-esp8266.readthedocs.io/en/latest/ota_updates/readme.html
     # Use curl to test this:
-    # $ curl -H "User-Agent: ESP8266-http-Update" -H "x-ESP8266-Chip-ID: 0" -H "x-ESP8266-STA-MAC: 0" \
-    #   -H "x-ESP8266-AP-MAC: 0" -H "x-ESP8266-free-space: 0" -H "x-ESP8266-sketch-size: 0" \
-    #   -H  "x-ESP8266-sketch-md5: 0" -H "x-ESP8266-chip-size: 0" -H "x-ESP8266-sdk-version: 0" \
-    #   -H "x-ESP8266-version: 0" -H "x-ESP8266-mode: sketch" 0.0.0.0:5000/update -OJ
+    # $ curl -H "User-Agent: ESP8266-http-Update" -H "x-ESP8266-version: 0" \
+    # -H "x-ESP8266-mode: sketch" 0.0.0.0:5000/update -OJ
     user_agent = request.headers.get('User-Agent')
     if user_agent != 'ESP8266-http-Update':
         app.logger.warning('Invalid User-Agent header: {}'.format(user_agent))
         return index()
-
-    if any(k not in request.headers for k in ['x-ESP8266-Chip-ID', 'x-ESP8266-STA-MAC', 'x-ESP8266-AP-MAC',
-                                              'x-ESP8266-free-space', 'x-ESP8266-sketch-size', 'x-ESP8266-sketch-md5',
-                                              'x-ESP8266-chip-size', 'x-ESP8266-sdk-version']):
-        app.logger.warning('Missing ESP headers: {}'.format(request.headers))
-        abort(403)
 
     current_version = request.headers.get('x-ESP8266-version')
     if current_version is None:
