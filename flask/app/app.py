@@ -25,12 +25,14 @@ import hashlib
 import os
 import re
 import shutil
+import socket
 import threading
 from typing import Optional, Tuple
 
 import requests
+import urllib3
 from flask import abort, request, Response, send_from_directory, make_response
-from github import Github, GitRelease, Repository, UnknownObjectException
+from github import Github, GitRelease, Repository, GithubException, UnknownObjectException
 from packaging.version import parse
 from werkzeug.http import http_date
 
@@ -190,8 +192,8 @@ def download_latest_release(owner: str, repo_name: str, current_version: str, fi
                 current_version = '0'  # Get the latest version
 
         g = Github(app.config['GITHUB_OAUTH_TOKEN'])
-        repo = g.get_repo(owner + '/' + repo_name)  # type: Repository
         try:
+            repo = g.get_repo(owner + '/' + repo_name)  # type: Repository
             if list(repo.get_releases()):
                 release = repo.get_latest_release()  # type: GitRelease
                 if parse(release.tag_name) <= parse(current_version):
@@ -203,6 +205,21 @@ def download_latest_release(owner: str, repo_name: str, current_version: str, fi
         except UnknownObjectException:
             # This is triggered when a tag has been created, but no Github release has been made yet
             app.logger.exception('Error getting release for "{}"'.format(repo.full_name))
+            return None
+        except GithubException as e:
+            # Ignore server errors
+            if 500 <= e.status <= 599:
+                app.logger.warning('ShowUIUpdatePopup: Server error', exc_info=True)
+                return None
+            else:
+                raise e
+        except (socket.timeout, requests.exceptions.ReadTimeout, urllib3.exceptions.ReadTimeoutError,
+                urllib3.exceptions.ConnectTimeoutError):
+            # This is triggered when the connection times out. This happens when the connection is very slow
+            app.logger.warning('ShowUIUpdatePopup: Connection timeout', exc_info=True)
+            return None
+        except requests.exceptions.ConnectionError:
+            app.logger.warning('ShowUIUpdatePopup: Connection error', exc_info=True)
             return None
 
         # We need to make sure that it does not try to read the folder until we are done downloading the files
